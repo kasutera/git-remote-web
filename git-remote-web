@@ -210,6 +210,43 @@ bitbucket() {
     done
 }
 
+github() {
+    target_url=()
+
+    # TODO
+#    [ "${OPT_PR}" = 1 ] && target_url+=( "${REMOTE_URL}/pull-requests/new?source=${UPSTREAM_BRANCH}" )
+
+    if [ "${argc}" -gt 0 ]; then
+        for filename in "${argv[@]}"; do
+            path_url=$(get_path_url ${filename})
+            [ "${OPT_COMMIT}" != 1 ] \
+                && OPT_BRANCH=1
+
+            [ "${OPT_BRANCH}" = 1 ] \
+                && target_url+=( "${REMOTE_URL}/blob/${UPSTREAM_BRANCH}/${path_url}" )
+
+            [ "${OPT_COMMIT}" = 1 ] \
+                && target_url+=( "${REMOTE_URL}/blob/${COMMIT_ID}/${path_url}" )
+        done
+    else
+        [ "${OPT_BRANCH}" = 1 ] \
+            && target_url+=( "${REMOTE_URL}/tree/${UPSTREAM_BRANCH}" )
+
+        [ "${OPT_COMMIT}" = 1 ] \
+            && target_url+=( "${REMOTE_URL}/commit/${COMMIT_ID}" )
+    fi
+
+    [ -z "${target_url[@]}" ] && target_url+=( "${REMOTE_URL}" )
+
+    for url in "${target_url[@]}"; do
+        if [ "${OPT_OPEN}" = 1 ]; then
+            open $url
+        else
+            echo $url
+        fi
+    done
+}
+
 SSH_HTTP=$(judge_ssh_http ${REMOTE})
 
 case "${SSH_HTTP}" in
@@ -237,7 +274,7 @@ case "${REMOTE_HOST}" in
         ;;
 
     github )
-        echo "github: not supported yet" 1>&2
+        github
         ;;
 esac
 
