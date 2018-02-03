@@ -166,9 +166,10 @@ get_remote_host() {
 
 get_upstream_branch() {
     # $1: remote alias name
-    git rev-parse --abbrev-ref --remotes=$1 @{upstream} \
+    git branch -vv \
+        | grep "^\*.*\[.*\]" \
         | head -1 \
-        | sed -e 's/'$1'\///'
+        | sed -e 's/.*\['$1'\/\(.*\)\].*/\1/p'
 }
 
 get_path_url() {
@@ -185,9 +186,6 @@ bitbucket() {
     if [ "${argc}" -gt 0 ]; then
         for filename in "${argv[@]}"; do
             path_url=$(get_path_url ${filename})
-            [ "${OPT_COMMIT}" != 1 ] \
-                && OPT_BRANCH=1
-
             [ "${OPT_BRANCH}" = 1 ] \
                 && target_url+=( "${REMOTE_URL}/src/HEAD/${path_url}?at=${UPSTREAM_BRANCH}" )
 
@@ -222,9 +220,6 @@ github() {
     if [ "${argc}" -gt 0 ]; then
         for filename in "${argv[@]}"; do
             path_url=$(get_path_url ${filename})
-            [ "${OPT_COMMIT}" != 1 ] \
-                && OPT_BRANCH=1
-
             [ "${OPT_BRANCH}" = 1 ] \
                 && target_url+=( "${REMOTE_URL}/blob/${UPSTREAM_BRANCH}/${path_url}" )
 
@@ -267,8 +262,19 @@ case "${SSH_HTTP}" in
         ;;
 esac
 
+[ "${argc}" -gt 0 ] \
+    && OPT_BRANCH=1
+
 REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
-UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
+
+if [ "${OPT_BRANCH}" = 1 ]; then 
+    UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
+    if [ -z "$UPSTREAM_BRANCH" ]; then
+        echo "no upstream on current branch" 1>&2
+        exit 1
+    fi
+fi
+    
 COMMIT_ID=$(git show -s --format=%H)
 
 case "${REMOTE_HOST}" in 
