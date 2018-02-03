@@ -200,7 +200,7 @@ bitbucket() {
             && target_url+=( "${REMOTE_URL}/commits/${COMMIT_ID}" )
     fi
 
-    [ "${#target_url[@]}" -gt 0 ] && target_url+=( "${REMOTE_URL}" )
+    [ "${#target_url[@]}" -eq 0 ] && target_url+=( "${REMOTE_URL}" )
 
     for url in "${target_url[@]}"; do
         if [ "${OPT_OPEN}" = 1 ]; then
@@ -234,7 +234,7 @@ github() {
             && target_url+=( "${REMOTE_URL}/commit/${COMMIT_ID}" )
     fi
 
-    [ "${#target_url[@]}" -gt 0 ] && target_url+=( "${REMOTE_URL}" )
+    [ "${#target_url[@]}" -eq 0 ] && target_url+=( "${REMOTE_URL}" )
 
     for url in "${target_url[@]}"; do
         if [ "${OPT_OPEN}" = 1 ]; then
@@ -262,8 +262,9 @@ case "${SSH_HTTP}" in
         ;;
 esac
 
-[ "${argc}" -gt 0 ] \
-    && OPT_BRANCH=1
+if [ "${argc}" -gt 0 -a "${OPT_COMMIT}" = 0 ]; then
+    OPT_BRANCH=1
+fi
 
 REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
 
