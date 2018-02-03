@@ -4,11 +4,15 @@ set -e
 REMOTE=origin
 PROGNAME=git-remote-web
 
+# dealing with git alias
+[ ! -z "$GIT_PREFIX" ] \
+    && cd "$GIT_PREFIX"
+
 git rev-parse 2> /dev/null \
     || { echo "${PROGNAME}: not a git repository" 1>&2; exit 1; }
 
 # refer: https://qiita.com/hidekuro/items/f461b683699d264372ee
-function usage_exit {
+usage_exit() {
     cat <<_EOS_ 1>&2
 
   Usage: $PROGNAME [OPTIONS...] path
