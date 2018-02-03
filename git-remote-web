@@ -257,7 +257,7 @@ case "${SSH_HTTP}" in
         ;;
 
     * )
-        echo "not supported" 1>&2
+        echo "${PROGNAME}: not supported" 1>&2
         exit 1
         ;;
 esac
@@ -270,7 +270,7 @@ REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
 if [ "${OPT_BRANCH}" = 1 ]; then 
     UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
     if [ -z "$UPSTREAM_BRANCH" ]; then
-        echo "no upstream on current branch" 1>&2
+        echo "${PROGNAME}: no upstream on current branch" 1>&2
         exit 1
     fi
 fi
