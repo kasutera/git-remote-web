@@ -162,10 +162,9 @@ get_remote_host() {
 
 get_upstream_branch() {
     # $1: remote alias name
-    git branch -vv \
+    git rev-parse --abbrev-ref --remotes=$1 @{upstream} \
         | head -1 \
-        | awk '{print $4}' \
-        | sed -e 's/\['$1'\///' -e 's/\]$//'
+        | sed -e 's/'$1'\///'
 }
 
 get_path_url() {
