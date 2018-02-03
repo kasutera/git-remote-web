@@ -17,7 +17,7 @@ function usage_exit {
     -h, --help
     --remote=REMOTE             specify remote name (default: origin)
     -b, --branch                branch URL
-    -c, --commit                commit URL
+    -c, --commit                commit URL of current HEAD
     -p, --pull-request          pull request URL into master
     -o, --open                  open URL with browser
 
@@ -121,6 +121,7 @@ while (( $# > 0 )); do
     esac
     shift
 done
+
 
 
 judge_ssh_http() {
