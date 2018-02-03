@@ -212,20 +212,32 @@ bitbucket() {
 
 SSH_HTTP=$(judge_ssh_http ${REMOTE})
 
-if [ "${SSH_HTTP}" = "http" ]; then
-    REMOTE_URL=$(get_remote_http ${REMOTE})
-elif [ "${SSH_HTTP}" = "ssh" ]; then
-    REMOTE_URL=$(get_remote_ssh ${REMOTE})
-else
-    echo "not supported" 1>&2
-    exit 1
-fi
+case "${SSH_HTTP}" in
+    http )
+        REMOTE_URL=$(get_remote_http ${REMOTE})
+        ;;
+
+    ssh )
+        REMOTE_URL=$(get_remote_ssh ${REMOTE})
+        ;;
+
+    * )
+        echo "not supported" 1>&2
+        exit 1
+        ;;
+esac
 
 REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
 UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
 COMMIT_ID=$(git show -s --format=%H)
 
-if [ "${REMOTE_HOST}" = "bitbucket" ]; then
-    bitbucket
-fi
+case "${REMOTE_HOST}" in 
+    bitbucket )
+        bitbucket
+        ;;
+
+    github )
+        echo "github: not supported yet" 1>&2
+        ;;
+esac
 
