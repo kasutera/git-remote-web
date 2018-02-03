@@ -169,7 +169,7 @@ get_upstream_branch() {
     git branch -vv \
         | grep "^\*.*\[.*\]" \
         | head -1 \
-        | sed -e 's/.*\['$1'\/\(.*\)\].*/\1/p'
+        | sed -e 's/.*\['$1'\/\(.*\)\].*/\1/'
 }
 
 get_path_url() {
