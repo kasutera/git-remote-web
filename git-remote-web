@@ -168,6 +168,12 @@ get_upstream_branch() {
         | sed -e 's/\['$1'\///' -e 's/\]$//'
 }
 
+get_path_url() {
+    # $1: relative or absolute path from current directory
+    # return: relative path from .git directory
+    git ls-tree --full-name --name-only HEAD $1
+}
+
 bitbucket() {
     target_url=()
     if [ "${OPT_BRANCH}" = 1 ]; then
