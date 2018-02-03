@@ -1,4 +1,122 @@
 #!/bin/bash
+set -e
+
+REMOTE=origin
+PROGNAME=git-remote-web
+
+# refer: https://qiita.com/hidekuro/items/f461b683699d264372ee
+function usage_exit {
+    cat <<_EOS_ 1>&2
+
+  Usage: $PROGNAME [OPTIONS...] path
+
+  OPTIONS:
+    -h, --help
+    --remote=REMOTE       specify remote name (default: origin)
+    -b, --branch          branch URL
+    -c, --commit          commit URL
+    -p, --pull-request    create pull request
+    -o, --open            open URL with browser
+
+_EOS_
+    exit 1
+}
+
+declare -i argc=0
+declare -a argv=()
+
+while (( $# > 0 )); do
+    case "$1" in
+        - | -- )
+            # オプション終端
+            shift
+            argc+=$#
+            argv+=("$@")
+            break
+            ;;
+
+        --* )
+            # ロングオプション
+            opt_name="${1#--}"
+            opt_name="${opt_name%%=*}"
+
+            delim_by_space=true
+            opt_value=""
+            if [[ "$1" =~ = ]]; then
+                delim_by_space=false
+                opt_value="${1#*=}"
+            fi
+
+            case "$opt_name" in
+                'help' )
+                    usage_exit
+                    ;;
+
+                'branch' )
+                    OPT_BRANCH=1
+                    ;;
+
+                'commit' )
+                    OPT_COMMIT=1
+                    ;;
+
+                'pull-request' )
+                    OPT_PR=1
+                    ;;
+
+                'open' )
+                    OPT_OPEN=1
+                    ;;
+
+                'remote' )
+                    REMOTE="$opt_value"
+                    [ "${REMOTE}" = "" ] \ 
+                        && { echo "${PROGNAME}: specify remote name" 1>&2 ; exit 1; }
+
+                    git remote \
+                        | grep "${REMOTE}" > /dev/null \
+                        || { echo "${PROGNAME}: ${REMOTE} is invalid" 1>&2 ; exit 1; }
+                    ;;
+            esac
+            ;;
+
+        -* )
+            # ショートオプション
+            for (( i=1; i < ${#1}; i++ )); do
+                opt_name="${1:$i:1}"
+                case "$opt_name" in
+                    'h' )
+                        usage_exit
+                        ;;
+
+                    'b' )
+                        OPT_BRANCH=1
+                        ;;
+
+                    'c' )
+                        OPT_COMMIT=1
+                        ;;
+
+                    'p' )
+                        OPT_PR=1
+                        ;;
+
+                    'o' )
+                        OPT_OPEN=1
+                        ;;
+                esac
+            done
+            ;;
+
+        * )
+            # 実引数
+            (( ++argc ))
+            argv+=("$1")
+            ;;
+    esac
+    shift
+done
+
 
 judge_ssh_http() {
     # http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_435
@@ -43,7 +161,6 @@ get_upstream_branch() {
         | sed -e 's/\['$1'\///' -e 's/\]$//'
 }
 
-REMOTE=origin
 SSH_HTTP=$(judge_ssh_http ${REMOTE})
 BRANCH=
 
