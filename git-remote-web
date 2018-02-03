@@ -12,11 +12,11 @@ function usage_exit {
 
   OPTIONS:
     -h, --help
-    --remote=REMOTE       specify remote name (default: origin)
-    -b, --branch          branch URL
-    -c, --commit          commit URL
-    -p, --pull-request    create pull request
-    -o, --open            open URL with browser
+    --remote=REMOTE             specify remote name (default: origin)
+    -b, --branch                branch URL
+    -c, --commit                commit URL
+    -p, --pull-request          pull request URL into master
+    -o, --open                  open URL with browser
 
 _EOS_
     exit 1
@@ -62,6 +62,8 @@ while (( $# > 0 )); do
 
                 'pull-request' )
                     OPT_PR=1
+                    #PR_BRANCH="$opt_value"
+                    #[ "${PR_BRANCH}" = "" ] && PR_BRANCH=master
                     ;;
 
                 'open' )
