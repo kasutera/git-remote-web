@@ -1,0 +1,60 @@
+#!/bin/bash
+
+judge_ssh_http() {
+    # http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_435
+    #   "the value is composed of characters from the portable filename character set"
+    git config --get remote.$1.url \
+        | awk '
+{
+    if($0 ~ /^http:/)
+        print "http"
+    else if($0 ~ /^https:/)
+        print "http"
+    else if($0 ~ /[A-Za-z0-9._-]*@github.com/)
+        print "ssh"
+    else if($0 ~ /[A-Za-z0-9._-]*@bitbucket.org/)
+        print "ssh"
+    else print "not supported"
+}
+'
+}
+
+get_remote_ssh() {
+    git config --get remote.$1.url \
+        | sed -e 's/:/\//' -e 's/[^@]*@/https:\/\//' -e 's/\.git$//'
+}
+
+get_remote_http() {
+    git config --get remote.$1.url \
+        | sed -e 's/\.git$//'
+}
+
+get_remote_host() {
+    # $1: http remote name
+    # return "github" or "bitbucket"
+    echo $1 \
+        | awk -F[/.] '{print $3}'
+}
+
+get_upstream_branch() {
+    # $1: remote alias name
+    git branch -vv \
+        | awk '{print $4}' \
+        | sed -e 's/\['$1'\///' -e 's/\]$//'
+}
+
+REMOTE=origin
+SSH_HTTP=$(judge_ssh_http ${REMOTE})
+BRANCH=
+
+if [ "${SSH_HTTP}" = "http" ]; then
+    REMOTE_URL=$(get_remote_http ${REMOTE})
+elif [ "${SSH_HTTP}" = "ssh" ]; then
+    REMOTE_URL=$(get_remote_ssh ${REMOTE})
+else
+    echo "not supported" 1>&2
+    exit 1
+fi
+
+REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
+
