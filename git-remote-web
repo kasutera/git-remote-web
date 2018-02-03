@@ -72,7 +72,7 @@ while (( $# > 0 )); do
 
                 'remote' )
                     REMOTE="$opt_value"
-                    [ "${REMOTE}" = "" ] \ 
+                    [ "${REMOTE}" = "" ] \
                         && { echo "${PROGNAME}: specify remote name" 1>&2 ; exit 1; }
 
                     git remote \
@@ -159,6 +159,7 @@ get_remote_host() {
 get_upstream_branch() {
     # $1: remote alias name
     git branch -vv \
+        | head -1 \
         | awk '{print $4}' \
         | sed -e 's/\['$1'\///' -e 's/\]$//'
 }
@@ -172,12 +173,11 @@ bitbucket() {
         target_url+=( "${REMOTE_URL}/commits/${COMMIT_ID}" )
     fi
     if [ "${OPT_PR}" = 1 ]; then
-        https://bitbucket.org/kasutera/sandbox/pull-requests/new?source=hoge&t=1
         target_url+=( "${REMOTE_URL}/pull-requests/new?source=${UPSTREAM_BRANCH}" )
     fi
 
     for url in "${target_url[@]}"; do
-        if [ "${OPT_OPEN}" = 1]; then
+        if [ "${OPT_OPEN}" = 1 ]; then
             open $url
         else
             echo $url
@@ -200,7 +200,7 @@ REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
 UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
 COMMIT_ID=$(git show -s --format=%H)
 
-if [ "{REMOTE_HOST}" = "bitbucket" ]; then
+if [ "${REMOTE_HOST}" = "bitbucket" ]; then
     bitbucket
 fi
 
