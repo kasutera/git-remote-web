@@ -5,13 +5,14 @@ setup() {
     # Create a temporary directory for each test
     TEST_REPO=$(mktemp -d)
     export TEST_REPO
+    BRANCH_NAME="test-branch"
+    export BRANCH_NAME
     
     # Create a test git repository
     cd "$TEST_REPO" || exit 1
     git init -q
-    git config user.email "test@example.com"
-    git config user.name "Test User"
-    
+    git checkout -q -b "$BRANCH_NAME"
+
     # Add the git-remote-web script to PATH
     export PATH="/app:$PATH"
     
@@ -43,7 +44,7 @@ teardown() {
     git remote add origin https://github.com/kasutera/git-remote-web.git
     
     result=$(git-remote-web -b)
-    [[ "$result" =~ ^https://github.com/kasutera/git-remote-web/tree/[a-zA-Z0-9_-]+$ ]]
+    [[ "$result" == "https://github.com/kasutera/git-remote-web/tree/${BRANCH_NAME}" ]]
 }
 
 # Test: Show file URL without options
@@ -52,7 +53,7 @@ teardown() {
     git remote add origin https://github.com/kasutera/git-remote-web.git
     
     result=$(git-remote-web README.md)
-    [[ "$result" =~ ^https://github.com/kasutera/git-remote-web/blob/[a-zA-Z0-9_-]+/README.md$ ]]
+    [[ "$result" == "https://github.com/kasutera/git-remote-web/blob/${BRANCH_NAME}/README.md" ]]
 }
 
 # Test: Show commit URL with -c option
