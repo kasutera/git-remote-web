@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 # Install dependencies
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     git \
