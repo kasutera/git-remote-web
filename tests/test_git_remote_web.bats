@@ -143,3 +143,23 @@ teardown() {
     result=$(git-remote-web -b)
     [[ "$result" =~ develop$ ]]
 }
+
+# Test: Error when file path does not exist
+@test "Error when file path does not exist" {
+    cd "$TEST_REPO" || exit 1
+    git remote add origin https://github.com/kasutera/git-remote-web.git
+    
+    run git-remote-web nonexistent-file.txt
+    [ "$status" -ne 0 ]
+    [[ "$output" =~ "does not exist" ]]
+}
+
+# Test: Error when directory path does not exist
+@test "Error when directory path does not exist" {
+    cd "$TEST_REPO" || exit 1
+    git remote add origin https://github.com/kasutera/git-remote-web.git
+    
+    run git-remote-web nonexistent/path/file.js
+    [ "$status" -ne 0 ]
+    [[ "$output" =~ "does not exist" ]]
+}

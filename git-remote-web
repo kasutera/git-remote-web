@@ -177,6 +177,9 @@ shift $((OPTIND - 1))
 # Remaining arguments are file paths
 if [[ $# -gt 0 ]]; then
     FILE_PATH="$1"
+    if [[ ! -e "$FILE_PATH" ]]; then
+        error "File or directory '$FILE_PATH' does not exist" >&2
+    fi
 fi
 
 # Get remote URL and normalize it
