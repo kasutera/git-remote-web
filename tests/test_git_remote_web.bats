@@ -92,51 +92,6 @@ teardown() {
     [[ "$result" == "https://github.com/kasutera/git-remote-web" ]]
 }
 
-# Test: SSH URL conversion for BitBucket
-@test "Convert SSH URL to HTTPS for BitBucket" {
-    cd "$TEST_REPO" || exit 1
-    git remote add origin git@bitbucket.org:kasutera/git-remote-web.git
-    
-    result=$(git-remote-web)
-    [[ "$result" == "https://bitbucket.org/kasutera/git-remote-web" ]]
-}
-
-# Test: BitBucket branch URL
-@test "Show BitBucket branch URL" {
-    cd "$TEST_REPO" || exit 1
-    git remote add origin https://bitbucket.org/kasutera/git-remote-web.git
-    
-    result=$(git-remote-web -b)
-    [[ "$result" =~ ^https://bitbucket.org/kasutera/git-remote-web/branch/[a-zA-Z0-9_-]+$ ]]
-}
-
-# Test: BitBucket file URL
-@test "Show BitBucket file URL" {
-    cd "$TEST_REPO" || exit 1
-    git remote add origin https://bitbucket.org/kasutera/git-remote-web.git
-    
-    result=$(git-remote-web README.md)
-    [[ "$result" =~ ^https://bitbucket.org/kasutera/git-remote-web/src/[a-zA-Z0-9_-]+/README.md$ ]]
-}
-
-# Test: BitBucket commit URL
-@test "Show BitBucket commit URL" {
-    cd "$TEST_REPO" || exit 1
-    git remote add origin https://bitbucket.org/kasutera/git-remote-web.git
-    
-    result=$(git-remote-web -c README.md)
-    [[ "$result" =~ ^https://bitbucket.org/kasutera/git-remote-web/src/[a-f0-9]{40}/README.md$ ]]
-}
-
-# Test: BitBucket pull requests URL
-@test "Show BitBucket pull requests URL" {
-    cd "$TEST_REPO" || exit 1
-    git remote add origin https://bitbucket.org/kasutera/git-remote-web.git
-    
-    result=$(git-remote-web -p)
-    [[ "$result" == "https://bitbucket.org/kasutera/git-remote-web/pull-requests" ]]
-}
-
 # Test: Custom remote name
 @test "Use custom remote name" {
     cd "$TEST_REPO" || exit 1

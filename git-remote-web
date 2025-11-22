@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # git-remote-web - An external command for Git hosting service
-# Supports GitHub and BitBucket
+# Supports GitHub
 
 set -e
 
@@ -41,9 +41,7 @@ normalize_url() {
     # Convert SSH to HTTPS if needed
     if [[ $url =~ ^git@github.com:(.+)\.git$ ]]; then
         echo "https://github.com/${BASH_REMATCH[1]}"
-    elif [[ $url =~ ^git@bitbucket.org:(.+)\.git$ ]]; then
-        echo "https://bitbucket.org/${BASH_REMATCH[1]}"
-    elif [[ $url =~ ^https://github.com/ ]] || [[ $url =~ ^https://bitbucket.org/ ]]; then
+    elif [[ $url =~ ^https://github.com/ ]]; then
         echo "${url%.git}"
     else
         error "Unsupported remote URL: $url"
@@ -72,8 +70,6 @@ build_branch_url() {
     
     if [[ $base_url =~ github.com ]]; then
         echo "${base_url}/tree/${branch}"
-    elif [[ $base_url =~ bitbucket.org ]]; then
-        echo "${base_url}/branch/${branch}"
     fi
 }
 
@@ -89,12 +85,6 @@ build_commit_url() {
         else
             echo "${base_url}/commit/${commit}"
         fi
-    elif [[ $base_url =~ bitbucket.org ]]; then
-        if [ -n "$file_path" ]; then
-            echo "${base_url}/src/${commit}/${file_path}"
-        else
-            echo "${base_url}/commits/${commit}"
-        fi
     fi
 }
 
@@ -106,8 +96,6 @@ build_file_url() {
     
     if [[ $base_url =~ github.com ]]; then
         echo "${base_url}/blob/${branch}/${file_path}"
-    elif [[ $base_url =~ bitbucket.org ]]; then
-        echo "${base_url}/src/${branch}/${file_path}"
     fi
 }
 
@@ -117,8 +105,6 @@ build_pr_url() {
     
     if [[ $base_url =~ github.com ]]; then
         echo "${base_url}/pulls"
-    elif [[ $base_url =~ bitbucket.org ]]; then
-        echo "${base_url}/pull-requests"
     fi
 }
 

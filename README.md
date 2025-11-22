@@ -13,7 +13,7 @@ https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338ef
 
 ## Requirement
 
-* GitHub or BitBucket
+* GitHub
 * bash
 * git
 * macOS (for `-o` option)
