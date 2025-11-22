@@ -1,27 +1,25 @@
-#!/usr/bin/env bash
-# Test runner for git-remote-web
+#!/bin/bash
+
+# Test runner script for bats tests
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Color output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
 
-# Check if bats is installed
-if ! command -v bats &> /dev/null; then
-    echo "Error: bats is not installed"
+echo -e "${YELLOW}Running git-remote-web tests...${NC}"
+echo ""
+
+# Run bats tests
+if bats /app/tests/test_git_remote_web.bats; then
     echo ""
-    echo "Local installation:"
-    echo "  brew install bats-core"
+    echo -e "${GREEN}✓ All tests passed${NC}"
+    exit 0
+else
     echo ""
-    echo "Or run tests in Docker:"
-    echo "  docker-compose up"
+    echo -e "${RED}✗ Tests failed${NC}"
     exit 1
 fi
-
-# Run tests
-echo "Running tests..."
-cd "$PROJECT_ROOT"
-bats tests/*.bats
-
-echo ""
-echo "All tests passed!"
