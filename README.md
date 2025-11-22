@@ -1,8 +1,8 @@
-git-remote-web
-===
+# git-remote-web
 
 An external command for Git hosting service
-```
+
+```console
 $ git web --branch
 https://github.com/kasutera/git-remote-web/tree/master
 $ git web README.md
@@ -12,24 +12,52 @@ https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338ef
 ```
 
 ## Requirement
+
 * GitHub or BitBucket
 * bash
 * git
 * macOS (for `-o` option)
 
 ## Usage
-```
+
+```bash
 git web [-b] [-c] [-o] [--remote=<remote name>] [<path/to/file>]
 git web [-p] [-o]
 ```
 
 ## Install
-```
+
+### Quick Install (Recommended)
+
+```bash
 git clone https://github.com/kasutera/git-remote-web.git
 cd git-remote-web
-cp git-remote-web ~/bin/
-cat << EOF >> ~/.gitconfig
-[alias]
-  web = !git-remote-web
-EOF
+./install.sh
+```
+
+The installer will:
+
+* Create a symlink to the script in `~/.local/bin/git-remote-web`
+* Configure the `git web` alias automatically
+* Verify your PATH configuration
+
+Updates are automatic since the symlink points to the cloned repository.
+
+### Manual Install
+
+```bash
+git clone https://github.com/kasutera/git-remote-web.git
+cd git-remote-web
+
+# Create symlink
+ln -s "${PWD}/git-remote-web" ~/.local/bin/
+
+# Add git alias
+git config --global alias.web "!${PWD}/git-remote-web"
+```
+
+Make sure `~/.local/bin` (or `~/bin`) is in your `$PATH`:
+
+```bash
+export PATH="${HOME}/.local/bin:${PATH}"  # Add to ~/.bashrc or ~/.zshrc
 ```
