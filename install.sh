@@ -30,7 +30,7 @@ fi
 read -p "Do you want to set up git alias 'git web'? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    git config --global alias.web "!${SCRIPT_DIR}/git-remote-web"
+    git config --global alias.web "!git-remote-web"
     echo "✓ Git alias 'web' configured"
     echo "  You can now use: git web"
 fi

@@ -61,7 +61,7 @@ cd git-remote-web
 ln -s "${PWD}/git-remote-web" ~/.local/bin/
 
 # Add git alias
-git config --global alias.web "!${PWD}/git-remote-web"
+git config --global alias.web "!git-remote-web"
 ```
 
 Make sure `~/.local/bin` (or `~/bin`) is in your `$PATH`:
