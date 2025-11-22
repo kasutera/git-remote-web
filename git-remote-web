@@ -212,8 +212,7 @@ bitbucket() {
 github() {
     target_url=()
 
-    # TODO
-#    [ "${OPT_PR}" = 1 ] && target_url+=( "${REMOTE_URL}/pull-requests/new?source=${UPSTREAM_BRANCH}" )
+   [ "${OPT_PR}" = 1 ] && target_url+=( "${REMOTE_URL}/pull/new/${UPSTREAM_BRANCH}" )
 
     if [ "${argc}" -gt 0 ]; then
         for filename in "${argv[@]}"; do
