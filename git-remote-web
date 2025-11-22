@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 REMOTE=origin
@@ -47,10 +47,8 @@ while (( $# > 0 )); do
             opt_name="${1#--}"
             opt_name="${opt_name%%=*}"
 
-            delim_by_space=true
             opt_value=""
             if [[ "$1" =~ = ]]; then
-                delim_by_space=false
                 opt_value="${1#*=}"
             fi
 
@@ -131,7 +129,7 @@ done
 judge_ssh_http() {
     # http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_435
     #   "the value is composed of characters from the portable filename character set"
-    git config --get remote.$1.url \
+    git config --get "remote.$1.url" \
         | awk '
 {
     if($0 ~ /^http:/)
@@ -148,12 +146,12 @@ judge_ssh_http() {
 }
 
 get_remote_ssh() {
-    git config --get remote.$1.url \
+    git config --get "remote.$1.url" \
         | sed -e 's/:/\//' -e 's/[^@]*@/https:\/\//' -e 's/\.git$//'
 }
 
 get_remote_http() {
-    git config --get remote.$1.url \
+    git config --get "remote.$1.url" \
         | sed -e 's/\.git$//'
 }
 
@@ -169,13 +167,13 @@ get_upstream_branch() {
     git branch -vv \
         | grep "^\*.*\[.*\]" \
         | head -1 \
-        | sed -e 's/.*\['$1'\/\(.*\)\].*/\1/'
+        | sed -e "s/.*\[$1\/\(.*\)\].*/\1/"
 }
 
 get_path_url() {
     # $1: relative or absolute path from current directory
     # return: relative path from .git directory
-    git ls-tree --full-name --name-only HEAD $1
+    git ls-tree --full-name --name-only HEAD "$1"
 }
 
 bitbucket() {
@@ -185,7 +183,7 @@ bitbucket() {
 
     if [ "${argc}" -gt 0 ]; then
         for filename in "${argv[@]}"; do
-            path_url=$(get_path_url ${filename})
+            path_url=$(get_path_url "${filename}")
             [ "${OPT_BRANCH}" = 1 ] \
                 && target_url+=( "${REMOTE_URL}/src/HEAD/${path_url}?at=${UPSTREAM_BRANCH}" )
 
@@ -204,9 +202,9 @@ bitbucket() {
 
     for url in "${target_url[@]}"; do
         if [ "${OPT_OPEN}" = 1 ]; then
-            open $url
+            open "$url"
         else
-            echo $url
+            echo "$url"
         fi
     done
 }
@@ -219,7 +217,7 @@ github() {
 
     if [ "${argc}" -gt 0 ]; then
         for filename in "${argv[@]}"; do
-            path_url=$(get_path_url ${filename})
+            path_url=$(get_path_url "${filename}")
             [ "${OPT_BRANCH}" = 1 ] \
                 && target_url+=( "${REMOTE_URL}/blob/${UPSTREAM_BRANCH}/${path_url}" )
 
@@ -238,22 +236,22 @@ github() {
 
     for url in "${target_url[@]}"; do
         if [ "${OPT_OPEN}" = 1 ]; then
-            open $url
+            open "$url"
         else
-            echo $url
+            echo "$url"
         fi
     done
 }
 
-SSH_HTTP=$(judge_ssh_http ${REMOTE})
+SSH_HTTP=$(judge_ssh_http "${REMOTE}")
 
 case "${SSH_HTTP}" in
     http )
-        REMOTE_URL=$(get_remote_http ${REMOTE})
+        REMOTE_URL=$(get_remote_http "${REMOTE}")
         ;;
 
     ssh )
-        REMOTE_URL=$(get_remote_ssh ${REMOTE})
+        REMOTE_URL=$(get_remote_ssh "${REMOTE}")
         ;;
 
     * )
@@ -262,13 +260,13 @@ case "${SSH_HTTP}" in
         ;;
 esac
 
-if [ "${argc}" -gt 0 -a "${OPT_COMMIT}" = 0 ]; then
+if [[ "${argc}" -gt 0 ]] && [[ "${OPT_COMMIT}" = 0 ]]; then
     OPT_BRANCH=1
 fi
 
 REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
 
-if [ "${OPT_BRANCH}" = 1 -o "${OPT_PR}" = 1 ]; then 
+if [[ "${OPT_BRANCH}" = 1 ]] || [[ "${OPT_PR}" = 1 ]]; then 
     UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
     if [ -z "$UPSTREAM_BRANCH" ]; then
         echo "${PROGNAME}: no upstream on current branch" 1>&2
