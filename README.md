@@ -29,7 +29,7 @@ $ git web -h
     --remote=REMOTE             specify remote name (default: origin)
     -b, --branch                branch URL
     -c, --commit                commit URL of current HEAD
-    -p, --pull-request          pull request URL into master
+    -p, --pull-request          pull request URL into default branch
     -o, --open                  open URL with browser
 ```
 
