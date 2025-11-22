@@ -80,7 +80,8 @@ teardown() {
     git remote add origin https://github.com/kasutera/git-remote-web.git
     
     result=$(git-remote-web -p)
-    [[ "$result" == "https://github.com/kasutera/git-remote-web/pulls" ]]
+    echo "result: $result"
+    [[ "$result" == "https://github.com/kasutera/git-remote-web/pull/new/${BRANCH_NAME}" ]]
 }
 
 # Test: SSH URL conversion for GitHub

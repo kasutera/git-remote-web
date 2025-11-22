@@ -102,9 +102,10 @@ build_file_url() {
 # Function to build PR URL
 build_pr_url() {
     local base_url=$1
+    local branch=$2
     
     if [[ $base_url =~ github.com ]]; then
-        echo "${base_url}/pulls"
+        echo "${base_url}/pull/new/${branch}"
     fi
 }
 
@@ -144,18 +145,17 @@ done
 # Get remote URL and normalize it
 REMOTE_URL=$(get_remote_url "$REMOTE_NAME")
 BASE_URL=$(normalize_url "$REMOTE_URL")
+BRANCH=$(get_current_branch)
 
 # Determine what to show
 if $SHOW_PR; then
-    URL=$(build_pr_url "$BASE_URL")
+    URL=$(build_pr_url "$BASE_URL" "$BRANCH")
 elif $SHOW_COMMIT; then
     COMMIT=$(get_current_commit)
     URL=$(build_commit_url "$BASE_URL" "$COMMIT" "$FILE_PATH")
 elif [ -n "$FILE_PATH" ]; then
-    BRANCH=$(get_current_branch)
     URL=$(build_file_url "$BASE_URL" "$BRANCH" "$FILE_PATH")
 elif $SHOW_BRANCH; then
-    BRANCH=$(get_current_branch)
     URL=$(build_branch_url "$BASE_URL" "$BRANCH")
 else
     URL="$BASE_URL"
