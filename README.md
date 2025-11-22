@@ -11,7 +11,7 @@ $ git web --commit README.md
 https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338efec1b0c70/README.md
 ```
 
-## Requirement
+## Requirements
 
 * GitHub
 * bash
@@ -21,8 +21,16 @@ https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338ef
 ## Usage
 
 ```bash
-git web [-b] [-c] [-o] [--remote=<remote name>] [<path/to/file>]
-git web [-p] [-o]
+$ git web -h 
+  Usage:  [OPTIONS...] path
+
+  OPTIONS:
+    -h, --help
+    --remote=REMOTE             specify remote name (default: origin)
+    -b, --branch                branch URL
+    -c, --commit                commit URL of current HEAD
+    -p, --pull-request          pull request URL into master
+    -o, --open                  open URL with browser
 ```
 
 ## Install

@@ -5,6 +5,22 @@
 
 set -e
 
+usage_exit() {
+    cat <<_EOS_ 1>&2
+
+  Usage: $PROGNAME [OPTIONS...] path
+
+  OPTIONS:
+    -h, --help
+    --remote=REMOTE             specify remote name (default: origin)
+    -b, --branch                branch URL
+    -c, --commit                commit URL of current HEAD
+    -p, --pull-request          pull request URL into master
+    -o, --open                  open URL with browser
+_EOS_
+    exit 0
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -110,37 +126,58 @@ build_pr_url() {
 }
 
 # Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -b|--branch)
+while getopts "hbcpo-:" opt; do
+    case $opt in
+        h)
+            usage_exit
+            ;;
+        b)
             SHOW_BRANCH=true
-            shift
             ;;
-        -c|--commit)
+        c)
             SHOW_COMMIT=true
-            shift
             ;;
-        -p|--pull)
+        p)
             SHOW_PR=true
-            shift
             ;;
-        -o|--open)
+        o)
             OPEN_BROWSER=true
-            shift
             ;;
-        --remote=*)
-            REMOTE_NAME="${1#*=}"
-            shift
+        -)
+            case "${OPTARG}" in
+                branch)
+                    SHOW_BRANCH=true
+                    ;;
+                commit)
+                    SHOW_COMMIT=true
+                    ;;
+                pull)
+                    SHOW_PR=true
+                    ;;
+                open)
+                    OPEN_BROWSER=true
+                    ;;
+                remote=*)
+                    REMOTE_NAME="${OPTARG#*=}"
+                    ;;
+                *)
+                    error "Unknown option: --${OPTARG}"
+                    ;;
+            esac
             ;;
-        -*)
-            error "Unknown option: $1"
-            ;;
-        *)
-            FILE_PATH="$1"
-            shift
+        \?)
+            error "Unknown option: -${OPTARG}"
             ;;
     esac
 done
+
+# Shift off the options processed by getopts
+shift $((OPTIND - 1))
+
+# Remaining arguments are file paths
+if [[ $# -gt 0 ]]; then
+    FILE_PATH="$1"
+fi
 
 # Get remote URL and normalize it
 REMOTE_URL=$(get_remote_url "$REMOTE_NAME")
