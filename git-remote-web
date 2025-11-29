@@ -1,17 +1,10 @@
 #!/bin/bash
+
+# git-remote-web - An external command for Git hosting service
+# Supports GitHub
+
 set -e
 
-REMOTE=origin
-PROGNAME=git-remote-web
-
-# dealing with git alias
-[ ! -z "$GIT_PREFIX" ] \
-    && cd "$GIT_PREFIX"
-
-git rev-parse 2> /dev/null \
-    || { echo "${PROGNAME}: not a git repository" 1>&2; exit 1; }
-
-# refer: https://qiita.com/hidekuro/items/f461b683699d264372ee
 usage_exit() {
     cat <<_EOS_ 1>&2
 
@@ -22,269 +15,200 @@ usage_exit() {
     --remote=REMOTE             specify remote name (default: origin)
     -b, --branch                branch URL
     -c, --commit                commit URL of current HEAD
-    -p, --pull-request          pull request URL into master
+    -p, --pull-request          pull request URL into default branch
     -o, --open                  open URL with browser
-
 _EOS_
+    exit 0
+}
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Configuration
+REMOTE_NAME="${REMOTE_NAME:-origin}"
+SHOW_BRANCH=false
+SHOW_COMMIT=false
+SHOW_PR=false
+OPEN_BROWSER=false
+FILE_PATH=""
+
+# Function to print error and exit
+error() {
+    echo -e "${RED}Error: $1${NC}" >&2
     exit 1
 }
 
-declare -i argc=0
-declare -a argv=()
+# Function to print success message
+success() {
+    echo -e "${GREEN}$1${NC}"
+}
 
-while (( $# > 0 )); do
-    case "$1" in
-        - | -- )
-            # オプション終端
-            shift
-            argc+=$#
-            argv+=("$@")
-            break
+# Function to get remote URL
+get_remote_url() {
+    local remote=$1
+    git config --get "remote.${remote}.url" || error "Remote '${remote}' not found"
+}
+
+# Function to normalize Git URL to HTTPS
+normalize_url() {
+    local url=$1
+    # Convert SSH to HTTPS if needed
+    if [[ $url =~ ^git@github.com:(.+)\.git$ ]]; then
+        echo "https://github.com/${BASH_REMATCH[1]}"
+    elif [[ $url =~ ^https://github.com/ ]]; then
+        echo "${url%.git}"
+    else
+        error "Unsupported remote URL: $url"
+    fi
+}
+
+# Function to get current branch
+get_current_branch() {
+    git rev-parse --abbrev-ref HEAD || error "Failed to get current branch"
+}
+
+# Function to get current commit hash
+get_current_commit() {
+    git rev-parse HEAD || error "Failed to get current commit"
+}
+
+# Function to get repository root
+get_repo_root() {
+    git rev-parse --show-toplevel || error "Failed to get repository root"
+}
+
+# Function to build branch URL
+build_branch_url() {
+    local base_url=$1
+    local branch=$2
+    
+    if [[ $base_url =~ github.com ]]; then
+        echo "${base_url}/tree/${branch}"
+    fi
+}
+
+# Function to build commit URL
+build_commit_url() {
+    local base_url=$1
+    local commit=$2
+    local file_path=$3
+    
+    if [[ $base_url =~ github.com ]]; then
+        if [ -n "$file_path" ]; then
+            echo "${base_url}/blob/${commit}/${file_path}"
+        else
+            echo "${base_url}/commit/${commit}"
+        fi
+    fi
+}
+
+# Function to build file URL
+build_file_url() {
+    local base_url=$1
+    local branch=$2
+    local file_path=$3
+    
+    if [[ $base_url =~ github.com ]]; then
+        echo "${base_url}/blob/${branch}/${file_path}"
+    fi
+}
+
+# Function to build PR URL
+build_pr_url() {
+    local base_url=$1
+    local branch=$2
+    
+    if [[ $base_url =~ github.com ]]; then
+        echo "${base_url}/pull/new/${branch}"
+    fi
+}
+
+# Parse arguments
+while getopts "hbcpo-:" opt; do
+    case $opt in
+        h)
+            usage_exit
             ;;
-
-        --* )
-            # ロングオプション
-            opt_name="${1#--}"
-            opt_name="${opt_name%%=*}"
-
-            delim_by_space=true
-            opt_value=""
-            if [[ "$1" =~ = ]]; then
-                delim_by_space=false
-                opt_value="${1#*=}"
-            fi
-
-            case "$opt_name" in
-                'help' )
-                    usage_exit
+        b)
+            SHOW_BRANCH=true
+            ;;
+        c)
+            SHOW_COMMIT=true
+            ;;
+        p)
+            SHOW_PR=true
+            ;;
+        o)
+            OPEN_BROWSER=true
+            ;;
+        -)
+            case "${OPTARG}" in
+                branch)
+                    SHOW_BRANCH=true
                     ;;
-
-                'branch' )
-                    OPT_BRANCH=1
+                commit)
+                    SHOW_COMMIT=true
                     ;;
-
-                'commit' )
-                    OPT_COMMIT=1
+                pull)
+                    SHOW_PR=true
                     ;;
-
-                'pull-request' )
-                    OPT_PR=1
-                    #PR_BRANCH="$opt_value"
-                    #[ "${PR_BRANCH}" = "" ] && PR_BRANCH=master
+                open)
+                    OPEN_BROWSER=true
                     ;;
-
-                'open' )
-                    OPT_OPEN=1
+                remote=*)
+                    REMOTE_NAME="${OPTARG#*=}"
                     ;;
-
-                'remote' )
-                    REMOTE="$opt_value"
-                    [ "${REMOTE}" = "" ] \
-                        && { echo "${PROGNAME}: specify remote name" 1>&2 ; exit 1; }
-
-                    git remote \
-                        | grep "${REMOTE}" > /dev/null \
-                        || { echo "${PROGNAME}: ${REMOTE} is invalid" 1>&2 ; exit 1; }
+                *)
+                    error "Unknown option: --${OPTARG}"
                     ;;
             esac
             ;;
-
-        -* )
-            # ショートオプション
-            for (( i=1; i < ${#1}; i++ )); do
-                opt_name="${1:$i:1}"
-                case "$opt_name" in
-                    'h' )
-                        usage_exit
-                        ;;
-
-                    'b' )
-                        OPT_BRANCH=1
-                        ;;
-
-                    'c' )
-                        OPT_COMMIT=1
-                        ;;
-
-                    'p' )
-                        OPT_PR=1
-                        ;;
-
-                    'o' )
-                        OPT_OPEN=1
-                        ;;
-                esac
-            done
-            ;;
-
-        * )
-            # 実引数
-            (( ++argc ))
-            argv+=("$1")
+        \?)
+            error "Unknown option: -${OPTARG}"
             ;;
     esac
-    shift
 done
 
+# Shift off the options processed by getopts
+shift $((OPTIND - 1))
 
-
-judge_ssh_http() {
-    # http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_435
-    #   "the value is composed of characters from the portable filename character set"
-    git config --get remote.$1.url \
-        | awk '
-{
-    if($0 ~ /^http:/)
-        print "http"
-    else if($0 ~ /^https:/)
-        print "http"
-    else if($0 ~ /[A-Za-z0-9._-]*@github.com/)
-        print "ssh"
-    else if($0 ~ /[A-Za-z0-9._-]*@bitbucket.org/)
-        print "ssh"
-    else print "not supported"
-}
-'
-}
-
-get_remote_ssh() {
-    git config --get remote.$1.url \
-        | sed -e 's/:/\//' -e 's/[^@]*@/https:\/\//' -e 's/\.git$//'
-}
-
-get_remote_http() {
-    git config --get remote.$1.url \
-        | sed -e 's/\.git$//'
-}
-
-get_remote_host() {
-    # $1: http remote name
-    # return "github" or "bitbucket"
-    echo $1 \
-        | awk -F[/.] '{print $3}'
-}
-
-get_upstream_branch() {
-    # $1: remote alias name
-    git branch -vv \
-        | grep "^\*.*\[.*\]" \
-        | head -1 \
-        | sed -e 's/.*\['$1'\/\(.*\)\].*/\1/'
-}
-
-get_path_url() {
-    # $1: relative or absolute path from current directory
-    # return: relative path from .git directory
-    git ls-tree --full-name --name-only HEAD $1
-}
-
-bitbucket() {
-    target_url=()
-
-    [ "${OPT_PR}" = 1 ] && target_url+=( "${REMOTE_URL}/pull-requests/new?source=${UPSTREAM_BRANCH}" )
-
-    if [ "${argc}" -gt 0 ]; then
-        for filename in "${argv[@]}"; do
-            path_url=$(get_path_url ${filename})
-            [ "${OPT_BRANCH}" = 1 ] \
-                && target_url+=( "${REMOTE_URL}/src/HEAD/${path_url}?at=${UPSTREAM_BRANCH}" )
-
-            [ "${OPT_COMMIT}" = 1 ] \
-                && target_url+=( "${REMOTE_URL}/src/${COMMIT_ID}/${path_url}" )
-        done
-    else
-        [ "${OPT_BRANCH}" = 1 ] \
-            && target_url+=( "${REMOTE_URL}/branch/${UPSTREAM_BRANCH}" )
-
-        [ "${OPT_COMMIT}" = 1 ] \
-            && target_url+=( "${REMOTE_URL}/commits/${COMMIT_ID}" )
-    fi
-
-    [ "${#target_url[@]}" -eq 0 ] && target_url+=( "${REMOTE_URL}" )
-
-    for url in "${target_url[@]}"; do
-        if [ "${OPT_OPEN}" = 1 ]; then
-            open $url
-        else
-            echo $url
-        fi
-    done
-}
-
-github() {
-    target_url=()
-
-    # TODO
-#    [ "${OPT_PR}" = 1 ] && target_url+=( "${REMOTE_URL}/pull-requests/new?source=${UPSTREAM_BRANCH}" )
-
-    if [ "${argc}" -gt 0 ]; then
-        for filename in "${argv[@]}"; do
-            path_url=$(get_path_url ${filename})
-            [ "${OPT_BRANCH}" = 1 ] \
-                && target_url+=( "${REMOTE_URL}/blob/${UPSTREAM_BRANCH}/${path_url}" )
-
-            [ "${OPT_COMMIT}" = 1 ] \
-                && target_url+=( "${REMOTE_URL}/blob/${COMMIT_ID}/${path_url}" )
-        done
-    else
-        [ "${OPT_BRANCH}" = 1 ] \
-            && target_url+=( "${REMOTE_URL}/tree/${UPSTREAM_BRANCH}" )
-
-        [ "${OPT_COMMIT}" = 1 ] \
-            && target_url+=( "${REMOTE_URL}/commit/${COMMIT_ID}" )
-    fi
-
-    [ "${#target_url[@]}" -eq 0 ] && target_url+=( "${REMOTE_URL}" )
-
-    for url in "${target_url[@]}"; do
-        if [ "${OPT_OPEN}" = 1 ]; then
-            open $url
-        else
-            echo $url
-        fi
-    done
-}
-
-SSH_HTTP=$(judge_ssh_http ${REMOTE})
-
-case "${SSH_HTTP}" in
-    http )
-        REMOTE_URL=$(get_remote_http ${REMOTE})
-        ;;
-
-    ssh )
-        REMOTE_URL=$(get_remote_ssh ${REMOTE})
-        ;;
-
-    * )
-        echo "${PROGNAME}: not supported" 1>&2
-        exit 1
-        ;;
-esac
-
-if [ "${argc}" -gt 0 -a "${OPT_COMMIT}" = 0 ]; then
-    OPT_BRANCH=1
-fi
-
-REMOTE_HOST=$(get_remote_host "${REMOTE_URL}")
-
-if [ "${OPT_BRANCH}" = 1 -o "${OPT_PR}" = 1 ]; then 
-    UPSTREAM_BRANCH=$(get_upstream_branch "${REMOTE}")
-    if [ -z "$UPSTREAM_BRANCH" ]; then
-        echo "${PROGNAME}: no upstream on current branch" 1>&2
-        exit 1
+# Remaining arguments are file paths
+if [[ $# -gt 0 ]]; then
+    FILE_PATH="$1"
+    if [[ ! -e "$FILE_PATH" ]]; then
+        error "File or directory '$FILE_PATH' does not exist" >&2
     fi
 fi
-    
-COMMIT_ID=$(git show -s --format=%H)
 
-case "${REMOTE_HOST}" in 
-    bitbucket )
-        bitbucket
-        ;;
+# Get remote URL and normalize it
+REMOTE_URL=$(get_remote_url "$REMOTE_NAME")
+BASE_URL=$(normalize_url "$REMOTE_URL")
+BRANCH=$(get_current_branch)
 
-    github )
-        github
-        ;;
-esac
+# Determine what to show
+if $SHOW_PR; then
+    URL=$(build_pr_url "$BASE_URL" "$BRANCH")
+elif $SHOW_COMMIT; then
+    COMMIT=$(get_current_commit)
+    URL=$(build_commit_url "$BASE_URL" "$COMMIT" "$FILE_PATH")
+elif [ -n "$FILE_PATH" ]; then
+    URL=$(build_file_url "$BASE_URL" "$BRANCH" "$FILE_PATH")
+elif $SHOW_BRANCH; then
+    URL=$(build_branch_url "$BASE_URL" "$BRANCH")
+else
+    URL="$BASE_URL"
+fi
 
+# Output URL
+echo "$URL"
+
+# Open in browser if requested (macOS only)
+if $OPEN_BROWSER; then
+    if command -v open &> /dev/null; then
+        open "$URL"
+    else
+        error "The -o option is only supported on macOS"
+    fi
+fi

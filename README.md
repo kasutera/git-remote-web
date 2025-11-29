@@ -1,8 +1,10 @@
-git-remote-web
-===
+# git-remote-web
+
+> **Note**: This project is archived. GitHub CLI (`gh`) now provides equivalent functionality as a standard tool. See [Migration to gh](#migration-to-gh) for details.
 
 An external command for Git hosting service
-```
+
+```console
 $ git web --branch
 https://github.com/kasutera/git-remote-web/tree/master
 $ git web README.md
@@ -11,25 +13,72 @@ $ git web --commit README.md
 https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338efec1b0c70/README.md
 ```
 
-## Requirement
-* GitHub or BitBucket
+## Migration to gh
+
+| This Tool | GitHub CLI (`gh`) |
+|-----------|------------------|
+| `git web --branch` | `gh browse --branch <branch>` |
+| `git web README.md` | `gh browse README.md` |
+| `git web --commit README.md` | `gh browse --commit <commit> README.md` |
+| `git web -o` | `gh browse -w` |
+
+Installing `gh` provides access to many more GitHub operations.
+
+## Requirements
+
+* GitHub
 * bash
 * git
 * macOS (for `-o` option)
 
 ## Usage
-```
-git web [-b] [-c] [-o] [--remote=<remote name>] [<path/to/file>]
-git web [-p] [-o]
+
+```bash
+$ git web -h 
+  Usage:  [OPTIONS...] path
+
+  OPTIONS:
+    -h, --help
+    --remote=REMOTE             specify remote name (default: origin)
+    -b, --branch                branch URL
+    -c, --commit                commit URL of current HEAD
+    -p, --pull-request          pull request URL into default branch
+    -o, --open                  open URL with browser
 ```
 
 ## Install
-```
+
+### Quick Install (Recommended)
+
+```bash
 git clone https://github.com/kasutera/git-remote-web.git
 cd git-remote-web
-cp git-remote-web ~/bin/
-cat << EOF >> ~/.gitconfig
-[alias]
-  web = !git-remote-web
-EOF
+./install.sh
+```
+
+The installer will:
+
+* Create a symlink to the script in `~/.local/bin/git-remote-web`
+* Configure the `git web` alias automatically
+* Verify your PATH configuration
+
+Updates are automatic since the symlink points to the cloned repository.
+
+### Manual Install
+
+```bash
+git clone https://github.com/kasutera/git-remote-web.git
+cd git-remote-web
+
+# Create symlink
+ln -s "${PWD}/git-remote-web" ~/.local/bin/
+
+# Add git alias
+git config --global alias.web "!git-remote-web"
+```
+
+Make sure `~/.local/bin` (or `~/bin`) is in your `$PATH`:
+
+```bash
+export PATH="${HOME}/.local/bin:${PATH}"  # Add to ~/.bashrc or ~/.zshrc
 ```

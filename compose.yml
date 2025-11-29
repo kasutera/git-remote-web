@@ -1,0 +1,6 @@
+# Docker environment for testing which affects git configuration
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile

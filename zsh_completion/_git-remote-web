@@ -1,0 +1,15 @@
+#compdef git-remote-web
+_git-remote-web() {
+    _arguments -C \
+        {-h,--help}'[show help]' \
+        {-b,--branch}'[branch URL]' \
+        {-c,--commit}'[commit URL of current HEAD]' \
+        {-p,--pull-request}'[pull request URL into master]' \
+        {-o,--open}'[open URL with browser]' \
+        {--remote}'[specify remote name with --remote]' \
+        '*: :__git-remote-web_modes'
+}
+
+__git-remote-web_modes() {
+    _files
+}
