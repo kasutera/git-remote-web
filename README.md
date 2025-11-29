@@ -1,5 +1,7 @@
 # git-remote-web
 
+> **Note**: This project is archived. GitHub CLI (`gh`) now provides equivalent functionality as a standard tool. See [Migration to gh](#migration-to-gh) for details.
+
 An external command for Git hosting service
 
 ```console
@@ -10,6 +12,17 @@ https://github.com/kasutera/git-remote-web/blob/master/README.md
 $ git web --commit README.md
 https://github.com/kasutera/git-remote-web/blob/a3375bf2f6decc247c3e7ef7ee6338efec1b0c70/README.md
 ```
+
+## Migration to gh
+
+| This Tool | GitHub CLI (`gh`) |
+|-----------|------------------|
+| `git web --branch` | `gh browse --branch <branch>` |
+| `git web README.md` | `gh browse README.md` |
+| `git web --commit README.md` | `gh browse --commit <commit> README.md` |
+| `git web -o` | `gh browse -w` |
+
+Installing `gh` provides access to many more GitHub operations.
 
 ## Requirements
 
